@@ -1,32 +1,35 @@
 package org.craftedsw.tripservicekata.trip;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.craftedsw.tripservicekata.exception.UserNotLoggedInException;
 import org.craftedsw.tripservicekata.user.User;
 import org.craftedsw.tripservicekata.user.UserSession;
 
-public class TripService {
+import java.util.ArrayList;
+import java.util.List;
 
-	public List<Trip> getTripsByUser(User user) throws UserNotLoggedInException {
-		List<Trip> tripList = new ArrayList<Trip>();
-		User loggedUser = UserSession.getInstance().getLoggedUser();
-		boolean isFriend = false;
-		if (loggedUser != null) {
-			for (User friend : user.getFriends()) {
-				if (friend.equals(loggedUser)) {
-					isFriend = true;
-					break;
-				}
-			}
-			if (isFriend) {
-				tripList = TripDAO.findTripsByUser(user);
-			}
-			return tripList;
-		} else {
-			throw new UserNotLoggedInException();
-		}
-	}
-	
+public class TripService {
+    UserSession instance = UserSession.getInstance();
+    private final TripDAO tripDAO;
+
+    public TripService(UserSession instance, TripDAO tripDAO) {
+        this.instance = instance;
+        this.tripDAO = tripDAO;
+    }
+
+    public List<Trip> getTripsByUser(User searchedUser) throws UserNotLoggedInException {
+        User loggedUser = instance.getLoggedUser();
+
+        if (loggedUser == null) {
+            throw new UserNotLoggedInException();
+        }
+
+        List<Trip> tripList = new ArrayList<Trip>();
+
+        if (loggedUser.isFriendOf(searchedUser)) {
+            tripList = tripDAO.findTripsFor(searchedUser);
+        }
+        return tripList;
+    }
+
+
 }
